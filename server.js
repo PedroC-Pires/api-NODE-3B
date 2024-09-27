@@ -1,15 +1,50 @@
+
 import { fastify } from 'fastify'
-import { Database } from './database-users.js'
+import cors from '@fastify/cors'
+import { DatabasePostgres } from './database-postgres.js'
 
 const server = fastify();
-const database = new Database;
+const databasePostgres = new DatabasePostgres;
 
-server.post('/users', async (request, reply) => {
-  const body = request.body;
-  await database.createUser(body);
-  return 201;
+// CORS
+server.register(cors, {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
+})
+
+// ENDPOINTS (CRUD):
+
+// CREATE
+server.post('/livros', async (request, reply) => {
+    const body = request.body;
+    await databasePostgres.createLivro(body);
+    return reply.status(201).send();
+})
+
+// READ
+server.get('/livros', async () => {
+    const livros = await databasePostgres.listLivros();
+    return livros;
 });
 
-server.listen({
-  port: 3333,
+// UPDATE
+server.put('/livros/:id', async (request, reply) => {
+    const livroID = request.params.id;
+    const body = request.body;
+    await databasePostgres.updateLivro(livroID, body);
+
+    return reply.status(204).send();
 })
+
+// DELETE
+server.delete('/livros/:id', async (request, reply) => {
+    const livroID = request.params.id;
+    await databasePostgres.deleteLivro(livroID);
+
+    return reply.status(204).send();
+})
+
+
+server.listen({
+    port: 3333
+});
